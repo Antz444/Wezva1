@@ -1,1 +1,127 @@
 
+$ git config --global user.name "ADAM M"
+$ git config --global user.email "scmlearningcentre@gmail.com"
+$ git config --global push.default "simple"
+
+Basic Git workflow
+==================
+$ git clone <remote-repo> <local-workspace>
+$ git clone https://gitlab.com/masterclass3/masterclassmar23.git user01
+$ git add <file>
+$ git commit -m "message"
+$ git push
+$ git log
+$ git log -1 --oneline
+$ git pull
+$ git status
+$ git diff <filename>
+
+$ git reset --soft
+$ git reset --mixed
+$ git reset --hard
+
+$ git revert <commitID>
+$ git checkout <commitID>
+
+$ git branch
+$ git merge <source> <dest>
+$ git cherry-pick <commitID>
+
+gitlab.com/<namespace>/
+- user group
+- frontend project
+- microservice1 project
+- microservice2 project
+- microservice3 project ( 2 feature, 1 bugfix )
+
+Owner: all access, adminster the group/project (rename,delete), create subgroups, projects, users
+Maintainer: create subgroups, projects, add users, merge approvals
+Developer: clone, push/pull
+Reporter: read-only access
+
+$ ssh-keygen
+- Copy the ~/.ssh/id_rsa.pub from the source machine to ~/.ssh/authorized_keys in the remote server
+
+$ apt install git
+$ apt install openjdk-8-jdk
+$ export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+$ export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH
+$ apt install maven
+$ java -version
+$ mvn -version
+
+$ mvn clean package - Full build
+$ mvn package - Incremental build
+
+$ git clone https://gitlab.com/scmlearningcentre/mavenbuild.git demobuild
+
+$ netstat -an |grep 8080
+$ ps aux | grep java
+
+
+$ apt install -y nodejs
+$ node -v
+$ apt install -y npm
+$ git clone https://gitlab.com/scmlearningcentre/nodebuild.git nodebuild
+$ npm install mocha --save-dev
+$ npm install --only=production
+$ npm start
+$ npm test
+
+
+
+============
+TERRAFORM
+============
+- Prone to errors
+- not scalable
+- not optimized way of using
+- immutable infra
+- not cloud agnostic
+
+IAC:
+ * desired state as a file/code
+ * version the code/file
+ * review & reuse the code/file
+
+Install through Package:
+ $ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+ $ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+ $ sudo apt-get update && sudo apt-get install terraform
+
+Install specific version:
+ $ curl -O https://releases.hashicorp.com/terraform/0.15.2/terraform_0.15.2_linux_amd64.zip https://releases.hashicorp.com/terraform/
+ $ sudo apt install -y unzip
+ $ sudo unzip terraform_0.15.2_linux_amd64.zip -d /usr/local/bin/
+
+Access Key ID:
+AKIAWLQIL5DFMWCX2DYX
+Secret Access Key:
+/U99QQccEiW0oEMD5Vo7P7mK7f7nsdX9oozScwYq
+
+------------------TERRAFORM AWS SETUP----------
+1. Passing access/secret key as environment variables
+$ export AWS_ACCESS_KEY_ID=(your access key id)
+$ export AWS_SECRET_ACCESS_KEY=(your secret access key)
+
+2. Passing access/secret key through a credentials file
+Install AWS Cli:
+ $ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+ $ sudo apt install unzip && unzip awscliv2.zip
+ $ sudo ./aws/install --bin-dir /usr/bin --install-dir /usr/bin/aws-cli --update
+ $ aws --version
+
+Configure AWS Cli with Access/Secret Key
+ $ aws configure
+   - creates ~/.aws/credentials file
+
+
+
+Day-Day Tasks
+=============
+* Be part of the Scrum meetings
+* Maintain Gitlab, managing namespaces, user groups, projects, permission, branches, protecting branches, merge approvals
+
+Role & Responsibilities
+=======================
+* Support Continuous Development - Gitlab
