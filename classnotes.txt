@@ -116,6 +116,148 @@ Configure AWS Cli with Access/Secret Key
    - creates ~/.aws/credentials file
 
 
+HCL
+===
+ - HCL(Hashicorp Language)/ *.tf
+ - blocks { }
+ - every statement should be in a key = value format
+
+
+   provider block
+   --------------
+   Syntax:
+   provider "providername" {
+     key = value
+   }
+
+   resource block
+   --------------
+   Syntax:
+   resource "provider_resourcetype" "name" {
+      key = value
+   }
+
+Create Infrastructure
+---------------------
+$ mkdir -p terraform/basics
+$ cd terraform/basics
+$ vi main.tf
+
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-03d3eec31be6ef6f9"
+  instance_type = "t2.micro"
+}
+
+Terraform Workflow
+----------------------
+$ terraform init
+$ terraform validate
+$ terraform plan [-out planfile]
+  + indicates resource creation
+  - indicates resource deletion
+  +/- indicates resource recreation
+  ~ indicates resource modification
+$ terraform apply [planfile] -auto-approve
+$ terraform show
+$ terraform destroy
+
+INTERPOLATION: PROVIDER_RESOURCETYPE.RESOURCENAME.ATTRIBUTES
+
+Modify Infrastructure
+-------------------------
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-03d3eec31be6ef6f9"
+  instance_type = "t2.micro"
+}
+
+# Create S3 bucket
+resource "aws_s3_bucket" "example" {
+  # NOTE: S3 bucket names must be unique across _all_ AWS accounts
+  bucket = "wezvatech-adam-demo-s3-mar23"
+}
+
+$ terraform plan
+$ terraform apply -auto-approve
+$ terraform destroy
+$ terraform destroy -target aws_s3_bucket.example
+
+Implicit Dependency
+===================
+
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_eip" "ip" {
+  instance = aws_instance.example.id
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+}
+
+Explicit Dependency
+===================
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-006d3995d3a6b963b"
+  instance_type = "t2.micro"
+  depends_on = [aws_s3_bucket.example]
+}
+
+# Create S3 bucket
+resource "aws_s3_bucket" "example" {
+  bucket = "wezvatech-adam-demo-s3-mar23"
+}
+
+$ terraform destroy -target aws_instance.example
+- deletes both the parent & the dependent child resources if we delete parent
+- deletes only child if we delete child resource
+
+Force Recreation of Resources in Infrastructure
+----------------------------------------------------------
+* Add a new security group to the server & run plan/apply
+
+   - For version <15, latest its depreciated
+$ terraform taint aws_instance.example
+$ terraform untaint aws_instance.example
+   - For latest version 15.2 -
+$ terraform apply -replace=aws_instance.example -auto-approve
+
+TFSTATE File
+============
+* By default Terraform will create a local state file in the same workspace
+* This is what acts as the actual state, whereas the *.tf files gives the desired state
+
+$ vi backend.tf
+terraform{
+  backend "s3" {
+     bucket = "wezvatech-adam-demo-s3-mar23"
+     key = "default/terraform.tfstate" # path & file which will hold the state #
+     region = "ap-south-1"
+  }
+}
+
+
+
+
 
 Day-Day Tasks
 =============
@@ -125,3 +267,6 @@ Day-Day Tasks
 Role & Responsibilities
 =======================
 * Support Continuous Development - Gitlab
+
+
+
