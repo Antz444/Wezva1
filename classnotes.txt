@@ -256,6 +256,176 @@ terraform{
 }
 
 
+VARIABLES
+=========
+* User Variables & Output Variables
+* User variables type:
+ - string (default) - var.variablename ex: var.amiid
+ - numeric          
+ - list/array       - var.variablename[indexnumber] ex: var.amiid[0]
+ - map/hash         - var.variablename[keyname] ex: var.image_name["centos"]
+
+Syntax:
+-------
+variable "name" {
+   default = "defaultvalue"
+}
+
+String variables:
+----------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+  default = "ami-006d3995d3a6b963b"
+}
+
+variable "type" {
+  default = "t2.micro"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid
+  instance_type = var.type
+}
+	
+
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+$ terraform apply -auto-approve -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+$ terraform destroy -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+------New method for destroying from V0.15-------------
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca"  -var "type=t2.medium" -out destroyplan -destroy
+$ terraform apply -auto-approve destroyplan
+
+ -- passing values through a file to variables --
+- vi vars.tfvars
+   amiid = "ami-0c6615d1e95c98aca"
+   type = "t2.medium"
+
+$ terraform plan -var-file=vars.tfvars -out testplan3
+$ terraform apply -auto-approve testplan3
+
+$ terraform plan -var-file=vars.tfvars -out testplan4 -destroy
+$ terraform apply -auto-approve testplan4
+
+List variables:
+---------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+    type    = list
+    default = ["ami-0c6615d1e95c98aca", "ami-0c1a7f89451184c8b"]
+}    
+     
+variable "indexno" {
+  default = 0
+}             
+
+resource "aws_instance" "example" {
+  ami           = var.amiid[var.indexno]
+  instance_type = "t2.micro"
+}
+
+$ terraform plan -var "indexno=1" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "indexno=1" -out testplan2 -destroy
+$ terraform apply -auto-approve testplan2
+
+MAP variables:
+-------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+    type    = map
+    default = {
+       "centos" = "ami-0c6615d1e95c98aca"
+       "ubuntu" = "ami-0c1a7f89451184c8b"
+    }
+}
+
+variable "key" {
+  default = "ubuntu"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid[var.key]
+  instance_type = "t2.micro"
+}
+
+$ terraform plan -var "key=centos" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "key=centos" -out testplan2 -destroy
+$ terraform apply -auto-approve testplan2
+
+DataSource
+==========
+* This block is used to only read data from a provider
+* data block will return error if the data is not there
+
+Interpolation: DATA.DATASOURCETYPE.NAME.ATTRIBUTES
+
+Syntax:
+data "provider_datatype" "name" {
+   key = value
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+data "aws_availability_zones" "example" {
+    state = "available"
+}
+
+output "azlist" {
+    value = data.aws_availability_zones.example.names
+}
+
+data "aws_instances" "test" {
+  filter {
+    name = "instance-type"
+    values = ["t2.micro","t2.small"]
+  }
+
+  instance_state_names = ["running", "stopped"]
+}
+
+output "machinelist" {
+    value = data.aws_instances.test.private_ips[0]
+}
+
+Import
+======
+* Importing details of resources which are managed outside the terraform
+* First add respective resource blocks to your desired state
+* Import the existing details into the state file
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example1" {
+  ami           = "ami-0caf778a172362f1c"
+  instance_type = "t2.micro"
+}
+
+resource "aws_instance" "example2" {
+  ami           = "ami-0caf778a172362f1c"
+  instance_type = "t2.micro"
+}
+
+$ terraform import aws_instance.example2 i-0256dbffaad2d67d7
 
 
 
