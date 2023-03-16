@@ -427,6 +427,129 @@ resource "aws_instance" "example2" {
 
 $ terraform import aws_instance.example2 i-0256dbffaad2d67d7
 
+Modules
+=======
+* Reuse the code
+* flexibility in using the code
+
+Instance module
+------------------
+$ mkdir -p modules/instance
+$ vi main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid
+  instance_type = var.type
+}
+
+$ vi variables.tf
+variable "amiid" {
+  default = "ami-0c1a7f89451184c8b"
+}
+
+variable "type" {
+  default = "t2.micro"
+}
+
+$ vi output.tf
+output "id" {
+  value = aws_instance.example.id
+}
+
+EIP module
+---------------
+$ mkdir -p modules/eip
+$ vi main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_eip" "ip" {
+  instance = var.instanceid
+}
+
+variable "instanceid" {
+}
+
+---Root Module---
+$ cd rootmod
+$ vi main.tf
+module "instance" {
+  source = "../modules/instance"
+  amiid = var.instance_amiid
+  type = var.instance_type
+}
+
+module "eip" {
+   source = "../modules/eip"
+   instanceid = module.instance.id
+}
+
+$ vi variables.tf
+variable "instance_amiid" {
+  default = "ami-006d3995d3a6b963b"
+}
+
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+Built-In functions
+==================
+$ terraform console
+max(1,31,12)
+upper("hello")
+split("a", "tomato")
+substr("hello world", 1, 4)
+index(["a", "b", "c"], "b")
+length("adam")
+length(["a", "b"])
+lookup({a="1", b="2"}, "a", "novalue")
+
+Loops
+=====
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_iam_user" "example" {
+  name = "adam"
+}
+
+
+======Count keyword=====
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "user_names" {
+  description = "Create IAM users with these names"
+  type        = list(string)
+  default     = ["sravan","krishna","jagan","ramesh",john","shashi"]
+}
+
+resource "aws_iam_user" "example" {
+  count = length(var.user_names)
+  name  = var.user_names[count.index] 
+}
+
+=========for_each keyword=====
+* for_each runs the resource block as a Map
+* provider_resourcetype.resourcename["each.value"]
+
+variable "user_names" {
+  description = "Create IAM users with these names"
+  type        = list(string)
+  default     = ["sriram","anil","teja","suresh","jacob","balaji"]
+}
+
+resource "aws_iam_user" "example" {
+  for_each = toset(var.user_names)
+  name     = each.value
+}
 
 
 Day-Day Tasks
