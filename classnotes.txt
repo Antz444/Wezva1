@@ -551,6 +551,145 @@ resource "aws_iam_user" "example" {
   name     = each.value
 }
 
+Conditions
+==========
+* Default value for count is 1, if count is > 1 then it loops the block
+* If count is 0 then the block will be skipped
+
+provider "aws" {
+  region = "ap-south-1"
+}
+resource "aws_iam_user" "example" {
+  name = "adam"
+  count = 0
+}
+
+-----------Ternary operator-----------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "con" {
+   default = "0"
+}
+
+resource "aws_iam_user" "example2" {
+  count = var.con ? 1 : 0       # expression ? <true_value> : <false_value>
+  name  = "example2"
+}
+
+# expression 0 is false, expression 1 is true
+
+Provisioners
+============
+# If we want to do some initial configuration the server
+# If we want to copy some files to the server
+# If we want to run some command or script inside the server
+# If we want to run some command or script on the terraform core server
+- Provisioner blocks are child blocks for resource blocks
+
+Resource:
+ * creation time provisioner (default)
+   - first resource will get created
+   - provisioner will be called
+ * destroy time provisioner
+   - provisioner will be called first
+   - resource will be destroyed at last
+
+Local-exec Provisioner
+-----------------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+ 
+  provisioner "local-exec" {
+    command = "echo ${aws_instance.example.private_ip} >> private_ips.txt"
+  }
+  provisioner "local-exec" {
+    command = "exit 1"
+    on_failure = continue
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = "rm private_ips.txt"
+  }  
+}
+
+FILE PROVISIONER
+-----------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+  key_name      = "mastermar23"
+
+  provisioner "file" {
+    source      = "test.conf"
+    destination = "/tmp/myapp.conf"
+  }
+
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("mastermar23.pem")
+    host     = self.public_ip
+  }
+}
+
+REMOTE-EXEC
+-----------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+  key_name      = "mastermar23"
+
+  provisioner "local-exec" {
+    command    = "echo 'while true; do echo hi-students; sleep 5; done' > myscript.sh"
+  }
+ 
+  provisioner "file" {
+    source      = "myscript.sh"
+    destination = "/tmp/myscript.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/myscript.sh",
+      "nohup /tmp/myscript.sh 2>&1 &",
+    ]
+  }
+
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("mastermar23.pem")
+    host     = self.public_ip
+  }
+}
+
+NULL RESOURCE
+-------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "null_resource" "dummy" {
+  provisioner "local-exec" {
+    command = "touch MYFILE"
+  }
+}
 
 Day-Day Tasks
 =============
