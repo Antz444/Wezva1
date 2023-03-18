@@ -691,6 +691,53 @@ resource "null_resource" "dummy" {
   }
 }
 
+Best Practices
+=============
+* Version control the changes
+* Multiple user accounts on AWS
+  - dev account for our devops development activities
+  - ops admin account for QA environment
+  - stage & prod admin account for production environment
+
+* Use AWS profiles & Alias
+
+[profilename]
+accessid=
+secretid=
+region=
+
+provider "aws" {
+  region = "ap-south-1"
+  profile = var.profile_name    # Access/Secret Key rereferred from ~/.aws/credentials #
+  alias = "mumbai"
+}
+	
+provider "aws" {
+  alias  = "virginia"               # Alias name for reference #
+  region = "us-east-1"
+  profile = "prod"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0742b4e673072066f"
+  instance_type = "t2.micro"
+  provider = aws.mumbai                 # Alias name to pick the provider #
+}
+resource "aws_instance" "example1" {
+  ami           = "ami-0742b4e673072066f"
+  instance_type = "t2.micro"
+  provider = aws.virginia               # Alias name to pick the provider #
+}
+
+* DRY principle - use variables & modules
+* Use remote state file & state-lock
+
+* Manage terraform logs (Log level: Info, Debug, Warn, Error, Trace)
+$ export TF_LOG=TRACE
+$ export TF_LOG_PATH=/tmp/terraformlog.txt
+
+
+
 Day-Day Tasks
 =============
 * Be part of the Scrum meetings
