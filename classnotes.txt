@@ -736,6 +736,16 @@ resource "aws_instance" "example1" {
 $ export TF_LOG=TRACE
 $ export TF_LOG_PATH=/tmp/terraformlog.txt
 
+Assignment:
+==========
+* Create a Gitlab project with branches to store all your Terraform examples
+* Create a Terraform module for a EC2 instance
+   - AMI
+   - TYPE
+   - PEM
+   - STORAGE 
+* Try to put a loop for the IAM module and create only the specific IAM policy
+
 
 
 Day-Day Tasks
