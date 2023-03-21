@@ -746,7 +746,69 @@ Assignment:
    - STORAGE 
 * Try to put a loop for the IAM module and create only the specific IAM policy
 
+=======
+ANSIBLE
+=======
 
+- Controller:
+$ sudo apt update 
+$ sudo apt install -y ansible
+$ which ansible
+$ ansible --version
+
+
+- Target Node:
+$ sudo apt update
+$ sudo apt install -y python3
+$ which python3
+$ python3 --version
+
+$ sudo hostnamectl set-hostname <machinename>
+
+Inventory: /etc/ansible/hosts
+---------
+[groupname]
+<MachineName> ansible_host=<<ec2-private-ip>> ansible_user=<<ec2-user>> ansible_ssh_private_key_file=/location/of/the/keypair/your-key.pem
+
+[demo]
+node1 ansible_host=172.31.36.184 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/mastermar23.pem
+
+[wezvatech]
+master ansible_host=172.31.39.38 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/mastermar23.pem
+
+Host-Pattern
+============
+$ ansible demo -m ping
+$ ansible wezvatech -m ping
+$ ansible node1 -m ping
+$ ansible node1,master -m ping
+$ ansible demo,master -m ping
+$ ansible wezvatech[0] -m ping
+$ ansible all -m ping
+
+ADHOC CMDS - to run a single task at a time
+==========
+$ ansible <HostPattern> -b -m <module> -a <Arbituary Options|OS-CMD>
+    hostpattern - server|group|all
+    task - module(python) + desired state
+
+$ ansible demo -m copy -a "src=dummyfile dest=/tmp/dummyfile"
+$ ansible demo -m copy -a "src=dummyfile dest=dummyfile"
+$ ansible demo -b -m package -a "name=git state=present"
+                                          present/absent/latest
+$ ansible demo -b -m package -a "name=apache2 state=present"
+$ ansible demo -b -m service -a "name=apache2 state=started"
+                                          started/stopped/restarted
+  # sudo systemctl status apache2
+  # netstat -an | grep 80
+  # curl localhost:80
+$ ansible demo -b -m user -a "name=testuser state=absent"
+  # id testuser
+$ ansible demo -m command -a "ls /tmp"
+
+$ ansible demo -m shell -a "ls /tmp | wc -l"
+   # when you need to use shell functions like pipe or redirection or background
+$ ansible demo -b -m command -a "apt update"
 
 Day-Day Tasks
 =============
