@@ -810,6 +810,190 @@ $ ansible demo -m shell -a "ls /tmp | wc -l"
    # when you need to use shell functions like pipe or redirection or background
 $ ansible demo -b -m command -a "apt update"
 
+
+PLAYBOOK (yaml) - multiple tasks at a time
+========
+YAML Syntax (.yaml, .yml):
+
+--- # comment
+- key1: value
+  key2: value
+  key3:
+    key3.1:
+      key3.1.1: value
+    key3.2: value
+- key4: value
+  key5: value
+  - key5.1.1: value
+    key5.1.2: value
+  - key5.2.1: value
+    key5.2.2: value
+
+--- # comment goes here
+- myname: adam
+  myloc: 
+   country: India
+   city: blr
+- mycourse: devops
+  level: basic-intermediate
+  - module: config_mgmt
+    tool: ansible
+  - module: IAC
+    tool: terraform
+
+
+* Target section: defines where to run, how to connect/run
+* Tasks section: defines what tasks to run
+* Handler section: defines a dependency on invoking only when a parent tasks changes the state
+* Variable section: define user variables
+
+SYNTAX:
+--- # defining a ansible play
+- hosts: <hostpattern>  # begins your target section
+  become: <yes/no>      # default is no
+  connection: <ssh/winrm/local> # defaults to ssh
+  become_user: <username> # defaults to the user in the inventory file
+  gather_facts: <yes/no> # defaults to yes
+  tasks:
+  - name: <Name-for-task1>
+    <module>: <arbituary options>
+    notify: <Name-for-task>
+  - name: <Name-for-task2>
+    <module>: <arbituary options>
+    register: <variablename>
+  handlers:
+  - name: <Name-for-task>
+    <module>: <arbituary options>
+
+Execute a playbook
+==================
+$ ansible-playbook <playbook>.yml 
+# running in verbose mode
+$ ansible-playbook <playbook>.yml -vvvv
+# run in dry-run mode
+$ ansible-playbook <playbook>.yml --check
+
+Example: ansible demo -b -m package -a "name=apache2 state=present"
+=======
+---
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=present
+  - name: Start Apache
+    service: name=apache2 state=started
+
+---
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=present
+  - name: Start Apache
+    service: name=apache2 state=stopped
+    notify: EOT
+  handlers:
+  - name: EOT
+    command: echo EOT
+
+---
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=latest
+    notify: Restart Server
+  - name: EOT
+    command: echo "EOT"
+    notify: Restart Server
+  handlers:
+  - name: Restart Server
+    command: echo "reboot"
+
+Variables
+=========
+* Reference used to store & retrieve a value, which can be reused and change values dynamically
+* Define a variable:       variablename: value
+* Retrieve value:          {{ variablename }}
+
+Variable Scope
+--------------
+* Play: scope is local to playbook or roles
+* Global: scope to all playbooks calling a inventory group
+* Host: scope to all playbook calling a particular host
+
+---
+- hosts: demo
+  become: yes
+  vars:
+    pkg: apache2
+    stp: present
+    sts: started
+  tasks:
+  - name: Install {{pkg}}
+    package: name={{pkg}} state={{stp}}
+  - name: Start {{pkg}}
+    service: name={{pkg}} state={{sts}}
+
+Defining variables at runtime
+-----------------------------
+$ ansible-playbook playbook.yml -e "varname=value"
+
+Register Variable
+-----------------
+* Capture the return output from module
+
+---
+- hosts: demo
+  tasks:
+  - name: print
+    command: echo HI
+    register: output         # output is a variable name
+  - debug: var=output
+  - debug: var=output.stdout # variable.attribute
+  - debug: var=output.rc
+
+Facts
+-----
+$ ansible demo -m setup
+
+---
+- hosts: demo
+  tasks:
+  - name: print ansible facts
+    debug: 
+     var: ansible_facts
+
+
+---
+- hosts: demo
+  tasks:
+  - name: print OS Family
+    command: echo {{ansible_os_family}}
+    register: gather
+  - debug: var=gather.stdout
+
+What is Ansible Set_Fact?
+------------------------
+Using set_fact, we can store the value after preparing it on the fly using certain task like using filters or taking subpart of another variable.
+
+---
+- hosts: demo
+  vars:
+     myname: Adam
+  tasks:
+  - name: print name
+    command: echo {{myname}}
+    register: output
+  - name: set fact variable
+    set_fact: testvar={{output.stdout}}
+  - name: Create file
+    file:
+      path: /tmp/{{testvar}}
+      state: touch
+
+
 Day-Day Tasks
 =============
 * Be part of the Scrum meetings
